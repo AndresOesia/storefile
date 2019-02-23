@@ -1,5 +1,10 @@
 package es.sinjava;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -8,11 +13,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.FileUtils;
+
 import es.sinjava.bean.FileChunk;
 import es.sinjava.bean.FileChunkInfo;
+import es.sinjava.bean.FilePreparedChunks;
 
 @Path("/hello")
 public class HelloWorld {
+
+	Decoder decoder = Base64.getDecoder();
 
 	@GET
 	@Path("/echo/{input}")
@@ -49,10 +59,42 @@ public class HelloWorld {
 	@Consumes("application/json")
 	public Response uploadChunkFile(FileChunk fileChunk) {
 		FileChunkInfo fileChunkInfo = new FileChunkInfo();
+
+		try {
+			File tempFile = new File(fileChunk.getPath());
+			byte[] contenido = decoder.decode(fileChunk.getChunk());
+			FileUtils.writeByteArrayToFile(tempFile, contenido, true);
+			if (fileChunk.getChunkNumber() == fileChunk.getNumber()) {
+				File destiny = new File(fileChunk.getId());
+				System.out.println(destiny.getAbsolutePath());
+				FileUtils.moveFile(tempFile, destiny);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		fileChunkInfo.setAll(15);
-		fileChunkInfo.setChunk(6);
+		fileChunkInfo.setChunk(fileChunk.getNumber());
 		fileChunkInfo.setRetrieved(true);
 		fileChunkInfo.setFilename(fileChunk.getId());
 		return Response.ok().entity(fileChunkInfo).build();
 	}
+
+	@POST
+	@Path("/fileprep")
+	@Produces({ "application/xml", "application/json" })
+	@Consumes("application/json")
+	public Response prepareChunks(FilePreparedChunks fileChunk) {
+
+		try {
+			File tempFile = File.createTempFile("guay", ".tmp");
+			fileChunk.setSeed(tempFile.getPath());
+		} catch (IOException e) {
+			// DO Nothing
+		}
+		fileChunk.setHost("http://localhost:8080/filiver/hello/filein");
+		fileChunk.setChunkLength(2500);
+		return Response.ok().entity(fileChunk).build();
+	}
+
 }
