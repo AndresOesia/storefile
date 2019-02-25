@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 
 import javax.ws.rs.core.Response;
 
@@ -14,6 +12,8 @@ import org.apache.cxf.jaxrs.client.WebClient;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.MappingJsonFactory;
+
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 import es.sinjava.bean.FileChunk;
 import es.sinjava.bean.FileChunkInfo;
@@ -28,10 +28,8 @@ public class App {
 
 		File sharleen = new File(App.class.getClassLoader().getResource("sharleen.jpg").getFile());
 		byte[] bytes = FileUtils.readFileToByteArray(sharleen);
-		System.out.println("Tamaño " + bytes.length);
-
-		Encoder encoder = Base64.getEncoder();
-		String chunk = encoder.encodeToString(bytes);
+		System.out.println("Tama�oo " + bytes.length);
+		String chunk = Base64.encode(bytes);
 		System.out.println(" En base 64 " + chunk);
 
 		WebClient client = WebClient.create("http://localhost:8080" + "/filiver/hello/file/Andres",
@@ -86,14 +84,12 @@ public class App {
 			System.arraycopy(bytes, currentPosition, currentChunk, 0, currentChunk.length);
 			currentPosition += bufferSize;
 			System.out.println("Tamaño del current " + currentChunk.length);
-			chunk = encoder.encodeToString(currentChunk);
+			chunk = Base64.encode(currentChunk);
 			fileChunk.setChunk(chunk);
 			fileChunk.setNumber(chunkNumber++);
 			Response r5 = clientStoreFile.accept("application/json").type("application/json").post(fileChunk);
 			System.out.println(r5.getStatus());
 		}
-
-		String chunkCustom = encoder.encodeToString(bytes);
 
 	}
 }

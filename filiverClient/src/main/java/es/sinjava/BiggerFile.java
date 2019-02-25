@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 
 import javax.ws.rs.core.Response;
 
@@ -14,6 +12,8 @@ import org.apache.cxf.jaxrs.client.WebClient;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.MappingJsonFactory;
+
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 import es.sinjava.bean.FileChunk;
 import es.sinjava.bean.FileChunkInfo;
@@ -24,14 +24,12 @@ import es.sinjava.bean.FilePreparedChunks;
  *
  */
 public class BiggerFile {
-	
-	static Encoder encoder = Base64.getEncoder();
-	
+
 	public static void main(String[] args) throws IOException {
 
-		File sharleen = new File(BiggerFile.class.getClassLoader().getResource("Charada.avi").getFile());
+		File sharleen = new File(BiggerFile.class.getClassLoader().getResource("MAIN.7z").getFile());
 		byte[] bytes = FileUtils.readFileToByteArray(sharleen);
-	
+
 		WebClient client = WebClient.create("http://localhost:8080" + "/filiver/hello/file/Andres",
 				Arrays.asList(new JacksonJsonProvider()));
 		Response r = client.accept("application/json").type("application/json").get();
@@ -66,13 +64,13 @@ public class BiggerFile {
 		WebClient clientStoreFile = WebClient.create(filePreparedChunks.getHost(),
 				Arrays.asList(new JacksonJsonProvider()));
 
-		int bufferSize = 1024*1024*50;
+		int bufferSize = 1024 * 1024 * 50;
 		int currentPosition = 0;
 		byte[] currentChunk = new byte[bufferSize];
 
 		FileChunk fileChunk = new FileChunk();
 		fileChunk.setPath(filePreparedChunks.getSeed());
-		fileChunk.setId("Bella.jpg");
+		fileChunk.setId("MAIN.7z");
 		int chunkNumber = 0;
 
 		while (currentPosition < bytes.length) {
@@ -81,8 +79,8 @@ public class BiggerFile {
 			}
 			System.arraycopy(bytes, currentPosition, currentChunk, 0, currentChunk.length);
 			currentPosition += bufferSize;
-			System.out.println("TamaÃ±o del current " + currentChunk.length);
-			String chunk = encoder.encodeToString(currentChunk);
+			System.out.println("Tamaño del current " + currentChunk.length);
+			String chunk = Base64.encode(currentChunk);
 			fileChunk.setChunk(chunk);
 			fileChunk.setNumber(chunkNumber++);
 			Response r5 = clientStoreFile.accept("application/json").type("application/json").post(fileChunk);
