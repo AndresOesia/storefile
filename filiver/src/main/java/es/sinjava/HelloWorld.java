@@ -2,8 +2,6 @@ package es.sinjava;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Base64.Decoder;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -15,14 +13,14 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.FileUtils;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+
 import es.sinjava.bean.FileChunk;
 import es.sinjava.bean.FileChunkInfo;
 import es.sinjava.bean.FilePreparedChunks;
 
 @Path("/hello")
 public class HelloWorld {
-
-	Decoder decoder = Base64.getDecoder();
 
 	@GET
 	@Path("/echo/{input}")
@@ -62,7 +60,7 @@ public class HelloWorld {
 
 		try {
 			File tempFile = new File(fileChunk.getPath());
-			byte[] contenido = decoder.decode(fileChunk.getChunk());
+			byte[] contenido = Base64.decode(fileChunk.getChunk());
 			FileUtils.writeByteArrayToFile(tempFile, contenido, true);
 			if (fileChunk.getChunkNumber() == fileChunk.getNumber()) {
 				File destiny = new File(fileChunk.getId());
